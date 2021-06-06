@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册登录</title>
+    <!-- 引入 layui.css -->
+    <link rel="stylesheet" href="layui/css/layui.css">
+    <style>
+        body{
+            width: 100%;
+            height:100%;
+            background-repeat:no-repeat;
+            background-image: url(images/bizhi4.jpg);
+            background-size:cover;
+            background-attachment: fixed;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .input-val {
+            width: 295px;
+            background: #ffffff;
+            height: 2.8rem;
+            padding: 0 2%;
+            border-radius: 5px;
+            border: none;
+            border: 1px solid rgba(0,0,0,.2);
+            font-size: 1.0625rem;
+            background:transparent;
+        }
+        #canvas {
+            float: right;
+            margin-right: 30px;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .layui-input{
+            width: 260px;
+            border: none;
+            border: 1px solid rgba(0,0,0,.2);
+            background:transparent;
+        }
+    </style>
+</head>
+<body>
+<!-- 引入 layui.js -->
+<script src="layui/layui.js"></script>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<script>
+
+    var form;
+    var islogin;
+    $(function(){
+        var show_num = [];
+        draw(show_num);
+        $("#canvas").on('click',function(){
+            draw(show_num);
+        })
+        layui.use(function(){
+            var table=layui.table;
+            var layer=layui.layer;
+            form =layui.form;
+            var layedit=layui.layedit;
+
+            form.verify({
+                phone:function (value,item){
+                    if(!value){
+                        return "请填写手机号码！";
+                    }
+                },
+                password:function (value,item){
+                    if(!value){
+                        return "请输入密码！";
+                    }
+                },
+                rePassword:function (value,item){
+                    if(islogin=="signin"){
+                        if(!value){
+                            return "请确认密码!";
+                        }
+                        else {
+                            var password=$("#password").val();
+                            if(value!=password){
+                                return "两次密码不一致！";
+                            }
+                        }
+                    }
+                },
+                /*verCode:function (value,item){
+                    if(!value){
+                        console.log("yebudayi");
+                        return "请输入验证码！";
+                    }
+                    else {
+                        var val = value.toLowerCase();
+                        var num = show_num.join("");
+                        if(val!=num){
+                            return "验证码错误！请重新输入！"
+                            $(".input-val").val('');
+                            draw(show_num);
+                        }
+                    }
+                }*/
+            });
+            form.on('submit(login)',function (data){
+                $.ajax({
+                    type:'POST',
+                    url:'http://localhost:8080/login',
+                    data:data.field,//表单的值
+                    dataType:'json',
+                    success: function (data){
+                        if(data.code==-1){
+                            layer.msg(data.msg);//还未注册
+                            draw(show_num);
+                            toSignin();
+                            relogin();
+                        }else if(data.code==0){
+                            layer.msg(data.msg);//密码错误
+                            relogin();
+                            draw(show_num);
+                        }
+                        else {
+                             layer.msg(data.msg);
+                             var status=data.data[0].status;
+                             console.log(status);
+                             if(status==2){
+                                 //window.open("/manageSystem/normalIndex.html");
+                                 layer.open({
+                                     title:'员工信息',
+                                     type:2,
+                                     content:'/manageSystem/normalIndex.html'?phone=
+                                 })
+                             }
+                             else {
+                                 window.open("/manageSystem/adminIndex.html");
+                             }
+                        }
+                    },
+                    error: function (){
+                        layer.msg("执行出错了");
+                    }
+                })
+            });
+            form.on('submit(register)',function (data){
+                $.ajax({
+                    type:'POST',
+                    url:'http://localhost:8080/register',
+                    data:data.field,//表单的值
+                    dataType:'json',
+                    success: function (data){
+                        if(data.code==-1){
+                            layer.msg(data.msg);//还未注册
+                            draw(show_num);
+                            toSignin();
+                            relogin();
+                        }else if(data.code==0){
+                            layer.msg(data.msg);//密码错误
+                            relogin();
+                            draw(show_num);
+                        }
+                        else {
+                            layer.msg(msg);
+                        }
+                    },
+                    error: function (){
+                        layer.msg("执行出错了");
+                    }
+                })
+            });
+        });
+    });
+
+    /*验证码*/
+    function draw(show_num) {
+        var canvas_width=$('#canvas').width();
+        var canvas_height=$('#canvas').height();
+        var canvas = document.getElementById("canvas");//获取到canvas的对象，演员
+        var context = canvas.getContext("2d");//获取到canvas画图的环境，演员表演的舞台
+        canvas.width = canvas_width;
+        canvas.height = canvas_height;
+        var sCode = "A,B,C,E,F,G,H,J,K,L,M,N,P,Q,R,S,T,W,X,Y,Z,1,2,3,4,5,6,7,8,9,0";
+        var aCode = sCode.split(",");
+        var aLength = aCode.length;//获取到数组的长度
+
+        for (var i = 0; i <= 3; i++) {
+            var j = Math.floor(Math.random() * aLength);//获取到随机的索引值
+            var deg = Math.random() * 30 * Math.PI / 180;//产生0~30之间的随机弧度
+            var txt = aCode[j];//得到随机的一个内容
+            show_num[i] = txt.toLowerCase();
+            var x = 10 + i * 20;//文字在canvas上的x坐标
+            var y = 20 + Math.random() * 8;//文字在canvas上的y坐标
+            context.font = "bold 23px 微软雅黑";
+
+            context.translate(x, y);
+            context.rotate(deg);
+
+            context.fillStyle = randomColor();
+            context.fillText(txt, 0, 0);
+
+            context.rotate(-deg);
+            context.translate(-x, -y);
+        }
+        for (var i = 0; i <= 5; i++) { //验证码上显示线条
+            context.strokeStyle = randomColor();
+            context.beginPath();
+            context.moveTo(Math.random() * canvas_width, Math.random() * canvas_height);
+            context.lineTo(Math.random() * canvas_width, Math.random() * canvas_height);
+            context.stroke();
+        }
+        for (var i = 0; i <= 30; i++) { //验证码上显示小点
+            context.strokeStyle = randomColor();
+            context.beginPath();
+            var x = Math.random() * canvas_width;
+            var y = Math.random() * canvas_height;
+            context.moveTo(x, y);
+            context.lineTo(x + 1, y + 1);
+            context.stroke();
+        }
+    }
+
+    function randomColor() {//得到随机的颜色值
+        var r = Math.floor(Math.random() * 256);
+        var g = Math.floor(Math.random() * 256);
+        var b = Math.floor(Math.random() * 256);
+        return "rgb(" + r + "," + g + "," + b + ")";
+    }
+    function toLogin(){
+        islogin="login";
+        $("#rePasswordDiv").hide();
+        $("#login").show();
+        $("#signin").hide();
+        $("#password").val('');
+        $(".input-val").val('');
+    }
+    function toSignin(){
+        islogin="signin";
+        $("#login").hide();
+        $("#signin").show();
+        $("#rePasswordDiv").show();
+    }
+    function relogin(){
+        $("#password").focus();
+        $("#password").val('');
+        $("#rePassword").val('');
+        $(".input-val").val('');
+    }
+
+</script>
+<ul class="layui-nav" lay-bar="disabled">
+    <li class="layui-nav-item">
+        <span>欢迎登录XX员工管理系统</span>
+    </li>
+    <li class="layui-nav-item" style="float: right">
+        <a  onclick="toSignin()">注册</a>
+    </li>
+    <li class="layui-nav-item" style="float: right">
+        <a  onclick="toLogin()">登录</a>
+    </li>
+</ul>
+<div class="" style="width: 400px;position: relative;left: 55%;">
+    <div action="" class="layui-form" style="margin-top: 50%">
+        <div class="layui-form-item">
+            <label class="layui-form-label"></label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" id="phone" name="phone" lay-verify="phone" placeholder="请输入手机号码" >
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"></label>
+            <div class="layui-input-inline">
+                <input type="password" class="layui-input" id="password" name="password" lay-verify="password" placeholder="请输入密码">
+            </div>
+        </div>
+        <div class="layui-form-item" id="rePasswordDiv" style="display: none">
+            <label class="layui-form-label"></label>
+            <div class="layui-input-inline">
+                <input type="password" class="layui-input" id="rePassword" name="rePassword" lay-verify="rePassword" placeholder="请确认密码">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"></label>
+            <div class="" style="">
+                <input type="text" class="input-val" lay-verify="verCode" style="width: 120px;height: 35px" placeholder="请输入验证码">
+                <canvas id="canvas" width="100" height="35" style="margin-left: 20px"></canvas>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="">
+                <button id="login" lay-submit class="layui-btn layui-btn-normal" style="width: 260px;margin-left: 110px" lay-filter="login">登录</button>
+                <button id="signin" lay-submit class="layui-btn layui-btn-normal" style="width: 260px;margin-left: 110px;display: none" lay-filter="register">注册</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

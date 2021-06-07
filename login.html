@@ -125,15 +125,10 @@
                         }
                         else {
                              layer.msg(data.msg);
-                             var status=data.data[0].status;
+                             var status=data.data.status;
                              console.log(status);
                              if(status==2){
-                                 //window.open("/manageSystem/normalIndex.html");
-                                 layer.open({
-                                     title:'员工信息',
-                                     type:2,
-                                     content:'/manageSystem/normalIndex.html'?phone=
-                                 })
+                                 window.open("/manageSystem/normalIndex.html");
                              }
                              else {
                                  window.open("/manageSystem/adminIndex.html");

@@ -34,7 +34,7 @@
       url:'http://localhost:8080/getUserInfo',
       dataType:'json',
       success:function (data){
-        var user=data[0];
+        var user=data;
         console.log(user);
         if(user){
           form.val("userInfoDiv",user);
